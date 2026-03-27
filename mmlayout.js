@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014  spin83
+Copyright (C) 2025-2026  Frederyk Abryan Palinoan
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
