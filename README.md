@@ -1,270 +1,225 @@
 # Multi Monitor Bar for GNOME Shell
 
-Add multiple monitors overview and panel for GNOME Shell. This is an updated fork with GNOME 46 compatibility.
+<p align="center">
+  <strong>Add full panels, overview, and mirrored indicators to every monitor.</strong>
+</p>
 
-## Features
+<p align="center">
+  <a href="https://extensions.gnome.org/extension/XXXX/multi-monitor-bar/">GNOME Extensions</a> ·
+  <a href="https://github.com/FrederykAbryan/multi-monitors-bar_fapv2">GitHub</a> ·
+  <a href="#donations">Donate</a>
+</p>
 
-- Show panel on additional monitors
-- Show Activities button on additional monitors
-- Show AppMenu on additional monitors
-- Show DateTime menu on additional monitors
-- Show thumbnails slider on additional monitors
-- Transfer indicators from main panel to additional monitors
-- Exclude specific indicators from being transferred (e.g., Fildem menu)
-- Hot corners on all monitors
+---
 
-## Compatibility
+An updated fork of [spin83/multi-monitors-add-on](https://github.com/spin83/multi-monitors-add-on) with modern GNOME Shell support (45 – 49), mirrored indicators, screenshot tool cloning, Blur my Shell integration, and more.
 
-This extension supports GNOME Shell versions:
-- 40, 41, 42, 43, 44, 45, 46, 47, 48, 49
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| **Panel on every monitor** | Full top bar with left / center / right sections |
+| **Activities button** | Open the overview from any monitor |
+| **AppMenu** | Per-monitor focused-app menu |
+| **DateTime menu** | Mirrored clock & calendar |
+| **Workspace thumbnails** | Slider on the left, right, or auto |
+| **Mirrored indicators** | Any status-area indicator (Vitals, GSConnect, etc.) can be transferred to secondary panels |
+| **Indicator exclusion list** | Prevent specific indicators from being transferred (e.g. Fildem) |
+| **Screenshot tools on all monitors** | Clone the screenshot toolbar to every screen, or follow the cursor |
+| **Blur my Shell integration** | Automatically register secondary panels for blur effects |
+| **Overview on extended monitors** | Show App Grid & Search on secondary displays |
+| **Force workspaces on all displays** | Override GNOME's *workspaces-only-on-primary* setting |
+| **Hot corners** | Enable/disable hot corners on all monitors |
+| **Window drag from panel** | Drag maximized windows off the panel on any monitor |
+
+## 📋 Compatibility
+
+**GNOME Shell:** 45, 46, 47, 48, 49
 
 Tested on:
-- Zorin OS 18 (Ubuntu 24.04 LTS)
-- GNOME 46
+- Zorin OS 18 (Ubuntu 24.04 LTS) — GNOME 46
 
-## Installation
+## 📦 Installation
 
-### Method 1: Manual Installation
+### Method 1: Reinstall Script (Recommended)
 
-1. **Copy the extension to the GNOME extensions directory:**
+The included script copies everything to the extensions directory, compiles schemas, and enables the extension in one step:
+
+```bash
+chmod +x reinstall.sh
+./reinstall.sh
+```
+
+> [!NOTE]
+> On **Wayland** you must log out and log back in for changes to take effect.
+> On **X11** press `Alt+F2`, type `r`, and press Enter.
+
+### Method 2: Manual Installation
+
+1. Copy the extension folder:
    ```bash
-   cp -r multi-monitors-bar@frederykabryan ~/.local/share/gnome-shell/extensions/
+   cp -r . ~/.local/share/gnome-shell/extensions/multi-monitors-bar@frederykabryan
    ```
 
-2. **Compile the GSettings schema:**
+2. Compile schemas:
    ```bash
    glib-compile-schemas ~/.local/share/gnome-shell/extensions/multi-monitors-bar@frederykabryan/schemas/
    ```
 
-3. **Restart GNOME Shell:**
-   - On **X11**: Press `Alt+F2`, type `r`, and press Enter
-   - On **Wayland**: Log out and log back in (or reboot)
+3. Restart GNOME Shell (see note above).
 
-4. **Enable the extension:**
+4. Enable:
    ```bash
    gnome-extensions enable multi-monitors-bar@frederykabryan
    ```
 
-### Method 2: Using the Install Script (Recommended)
+## ⚙️ Configuration
 
-The extension includes an install script that handles everything automatically:
+Open preferences through the **Extensions** app (click the ⚙️ icon next to *Multi Monitor Bar*) or via command line:
 
 ```bash
-chmod +x install.sh
-./install.sh
+gnome-extensions prefs multi-monitors-bar@frederykabryan
 ```
 
-The script will:
-- Check your GNOME Shell version for compatibility
-- Create the necessary directories
-- Copy all extension files
-- Compile the GSettings schemas
-- Provide instructions for enabling the extension
+### Preference Switches
 
-## Configuration
+| Setting | Key | Default |
+|---|---|---|
+| Show Panel | `show-panel` | `true` |
+| Show Activities Button | `show-activities` | `true` |
+| Show AppMenu Button | `show-app-menu` | `true` |
+| Show DateTime Menu | `show-date-time` | `true` |
+| Thumbnails Slider Position | `thumbnails-slider-position` | `auto` |
+| Enable Blur my Shell | `enable-blur-my-shell` | `true` |
+| Hot Corners | `enable-hot-corners` | (system default) |
+| Screenshot on All Monitors | `screenshot-on-all-monitors` | `false` |
+| Force Workspaces on All Displays | `force-workspaces-on-all-displays` | `true` |
+| Overview on Extended Monitors | `show-overview-on-extended-monitors` | `true` |
 
-### Access Extension Preferences
-
-Open the extension preferences using one of these methods:
-
-1. **GNOME Extensions app:**
-   - Open "Extensions" application
-   - Find "Multi Monitor Bar"
-   - Click the settings icon
-
-2. **Command line:**
-   ```bash
-   gnome-extensions prefs multi-monitors-bar@frederykabryan
-   ```
-
-### Settings
-
-#### Show Panel on Additional Monitors
-Enable or disable panels on additional monitors.
-
-#### Show Activities Button
-Show/hide the Activities button on additional monitor panels.
-
-#### Show AppMenu Button
-Show/hide the application menu on additional monitor panels.
-
-#### Show DateTime Menu
-Show/hide the date/time menu on additional monitor panels.
-
-#### Thumbnails Slider Position
-Choose where to show workspace thumbnails on additional monitors:
-- None (disabled)
-- Left
-- Right
-- Auto (follows main monitor)
-
-#### Transfer Indicators
-Select which indicators from the main panel should be transferred to additional monitor panels.
-
-**Note:** Indicators in the exclude list (like Fildem) will not appear in the available indicators list.
-
-### Advanced Configuration (gsettings)
-
-#### Exclude Indicators from Transfer
-
-By default, the `fildem-indicator` is excluded from being transferred to secondary monitors. You can customize this:
+### Advanced: gsettings CLI
 
 ```bash
-# View currently excluded indicators
-gsettings get org.gnome.shell.extensions.multi-monitors-add-on exclude-indicators
+# View / set any setting
+gsettings get  org.gnome.shell.extensions.multi-monitors-add-on show-panel
+gsettings set  org.gnome.shell.extensions.multi-monitors-add-on show-panel true
 
-# Add more indicators to exclude
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on exclude-indicators "['fildem-indicator', 'another-indicator']"
-
-# Remove all exclusions (allow all indicators to be transferred)
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on exclude-indicators "[]"
+# Exclude indicators from transfer
+gsettings get  org.gnome.shell.extensions.multi-monitors-add-on exclude-indicators
+gsettings set  org.gnome.shell.extensions.multi-monitors-add-on exclude-indicators \
+  "['fildem-indicator', 'another-indicator']"
 ```
 
-#### Find Indicator Names
-
-To find the internal name of an indicator:
+#### Finding Indicator Names
 
 ```bash
-# Run this in Looking Glass (Alt+F2, type 'lg', press Enter)
-# Then in the Evaluator tab:
+# In Looking Glass (Alt+F2 → lg → Evaluator tab):
 Object.keys(Main.panel.statusArea)
 ```
 
-#### Other Settings
+## 🔧 Troubleshooting
 
-```bash
-# Show/hide the extension indicator in the main panel
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on show-indicator true
+<details>
+<summary><strong>Extension doesn't appear</strong></summary>
 
-# Show/hide panels on additional monitors
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on show-panel true
-
-# Show/hide Activities button
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on show-activities true
-
-# Show/hide AppMenu button
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on show-app-menu true
-
-# Show/hide DateTime menu
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on show-date-time true
-
-# Set thumbnails slider position (none, left, right, auto)
-gsettings set org.gnome.shell.extensions.multi-monitors-add-on thumbnails-slider-position 'auto'
-```
-
-## Troubleshooting
-
-### Extension doesn't appear in the list
-
-1. Make sure the extension is installed in the correct directory:
+1. Verify installation path:
    ```bash
    ls ~/.local/share/gnome-shell/extensions/multi-monitors-bar@frederykabryan/
    ```
-
-2. Check that the schema is compiled:
+2. Check compiled schema exists:
    ```bash
    ls ~/.local/share/gnome-shell/extensions/multi-monitors-bar@frederykabryan/schemas/gschemas.compiled
    ```
+3. Restart GNOME Shell.
+</details>
 
-3. Restart GNOME Shell
+<details>
+<summary><strong>Extension fails to enable</strong></summary>
 
-### Extension fails to enable
+```bash
+journalctl -f -o cat /usr/bin/gnome-shell
+gnome-extensions info multi-monitors-bar@frederykabryan
+```
+</details>
 
-1. Check for errors in the logs:
-   ```bash
-   journalctl -f -o cat /usr/bin/gnome-shell
-   ```
+<details>
+<summary><strong>Panels not showing on secondary monitors</strong></summary>
 
-2. Try enabling with verbose output:
-   ```bash
-   gnome-extensions enable multi-monitors-bar@frederykabryan --verbose
-   ```
-
-3. Check extension info for errors:
-   ```bash
-   gnome-extensions info multi-monitors-bar@frederykabryan
-   ```
-
-### Panels not showing on additional monitors
-
-1. Make sure "Show Panel" is enabled in preferences
-2. Check that you have multiple monitors connected
-3. Try disabling and re-enabling the extension:
+1. Ensure **Show Panel** is enabled in preferences.
+2. Confirm multiple monitors are connected.
+3. Toggle the extension:
    ```bash
    gnome-extensions disable multi-monitors-bar@frederykabryan
-   gnome-extensions enable multi-monitors-bar@frederykabryan
+   gnome-extensions enable  multi-monitors-bar@frederykabryan
    ```
+</details>
 
-### Indicators not transferring
+<details>
+<summary><strong>Indicators not transferring</strong></summary>
 
-1. Make sure the indicator is not in the exclude list:
+1. Check the exclude list:
    ```bash
    gsettings get org.gnome.shell.extensions.multi-monitors-add-on exclude-indicators
    ```
+2. Refresh by toggling the extension.
+</details>
 
-2. Check available indicators:
-   ```bash
-   gsettings get org.gnome.shell.extensions.multi-monitors-add-on available-indicators
-   ```
-
-3. Refresh the available indicators by disabling/enabling the extension
-
-## Uninstallation
-
-To remove the extension:
+## 🗑️ Uninstallation
 
 ```bash
-# Disable the extension
 gnome-extensions disable multi-monitors-bar@frederykabryan
-
-# Remove extension files
 rm -rf ~/.local/share/gnome-shell/extensions/multi-monitors-bar@frederykabryan
-
 # Restart GNOME Shell
-# X11: Alt+F2, type 'r', press Enter
-# Wayland: Log out and log back in
 ```
 
-## Development
+## 🗂️ Project Structure
 
-### File Structure
+```
+.
+├── extension.js                  # Main extension entry point
+├── mmpanel.js                    # Multi-monitor panel (layout, drag, indicators)
+├── mmlayout.js                   # Layout manager for multi-monitor setup
+├── mmoverview.js                 # Overview / workspace views on secondary monitors
+├── mmcalendar.js                 # DateTime menu for secondary monitors
+├── mirroredIndicatorButton.js    # Generic indicator mirroring via Clutter.Clone
+├── statusIndicatorsController.js # Manages indicator transfer lifecycle
+├── screenshotPatch.js            # Screenshot UI cloning to all monitors
+├── mmPanelConstants.js           # Shared constants and settings keys
+├── common.js                     # Shell version detection & utility helpers
+├── utils.js                      # Misc utilities
+├── prefs.js                      # Preferences dialog (Adw / GTK4)
+├── metadata.json                 # Extension metadata & version
+├── stylesheet.css                # Panel & indicator CSS
+├── schemas/                      # GSettings schema definitions
+│   └── org.gnome.shell.extensions.multi-monitors-add-on.gschema.xml
+└── reinstall.sh                  # One-step reinstall script
+```
 
-- `extension.js` - Main extension code
-- `mmpanel.js` - Multi-monitor panel implementation
-- `mmlayout.js` - Layout manager for multi-monitor setup
-- `mmoverview.js` - Overview/workspace thumbnails for additional monitors
-- `mmcalendar.js` - Calendar/date-time menu for additional monitors
-- `indicator.js` - Extension status indicator
-- `prefs.js` - Preferences dialog
-- `convenience.js` - Utility functions
-- `metadata.json` - Extension metadata
-- `schemas/*.gschema.xml` - GSettings schema definitions
+## 🛠️ Development
 
-### Making Changes
+After modifying the source:
 
-After making changes to the extension code:
-
-1. Recompile schemas if you modified the schema file:
+1. Run the reinstall script (or copy files manually):
    ```bash
-   glib-compile-schemas ~/.local/share/gnome-shell/extensions/multi-monitors-bar@frederykabryan/schemas/
+   ./reinstall.sh
    ```
-
-2. Restart GNOME Shell to reload the extension
-
-3. Check for errors in the logs:
+2. On Wayland, log out / log back in. On X11, press `Alt+F2` → `r`.
+3. Watch logs for errors:
    ```bash
    journalctl -f -o cat /usr/bin/gnome-shell
    ```
 
-## License
+## ❤️ Donations
 
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+If you find this extension useful, please consider supporting development:
 
-## Credits
-This repo structure and base is copied from spin83
+- **Ko-fi:** [frederykabryan](https://ko-fi.com/frederykabryan)
+- **PayPal:** [multimonitorbar](https://paypal.me/multimonitorbar)
 
-Original author: spin83
+## 📄 License
 
-Original repository: https://github.com/spin83/multi-monitors-add-on
+This program is free software; you can redistribute it and/or modify it under the terms of the [GNU General Public License v2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html) (or any later version).
 
-Updated by: Frederyk, Claude, Github Copilot. (Mostly done by AI though.I only use 45 hours of my time to debug,prompt,debug,prompt,frustrated and repeat) 
+## 🙏 Credits
+
+- **Original author:** [spin83](https://github.com/spin83/multi-monitors-add-on)
+- **Forked & MOdify by:** Frederyk Abryan Palinoan — with extensive help from Claude, Gemini, ChatGPT and GitHub Copilot

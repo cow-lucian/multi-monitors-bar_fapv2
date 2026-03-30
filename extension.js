@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014  spin83
+Copyright (C) 2025-2026  Frederyk Abryan Palinoan
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,6 +21,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { ANIMATION_TIME } from 'resource:///org/gnome/shell/ui/overview.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as PanelModule from 'resource:///org/gnome/shell/ui/panel.js';
+import * as LoginManager from 'resource:///org/gnome/shell/misc/loginManager.js';
 
 // Shell version for feature detection - centralized here and exported for other modules
 
@@ -49,25 +50,31 @@ export default class MultiMonitorsExtension extends Extension {
 		this._settings = null;
 		this._mu_settings = null;
 		this._mmMonitors = 0;
+		this._primaryIndex = -1;
 		this.syncWorkspacesActualGeometry = null;
 
 		this._switchOffThumbnailsMuId = null;
 		this._showPanelId = null;
 		this._thumbnailsSliderPositionId = null;
 		this._relayoutId = null;
+		this._prepareForSleepId = null;
 	}
 
 	_showThumbnailsSlider() {
-		// We now allow mmOverview even if thumbnails are 'none', because we want Search and App Grid
-		// if (this._settings.get_string(THUMBNAILS_SLIDER_POSITION_ID) === 'none') {
-		// 	this._hideThumbnailsSlider();
-		// 	return;
-		// }
-
 		log('[MultiMonitors] _showThumbnailsSlider called');
 
-		if (this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID))
-			this._mu_settings.set_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID, false);
+		if (this._settings.get_boolean('force-workspaces-on-all-displays')) {
+			if (this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID))
+				this._mu_settings.set_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID, false);
+		} else {
+			if (!this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID))
+				this._mu_settings.set_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID, true);
+		}
+
+		if (!this._settings.get_boolean('show-overview-on-extended-monitors')) {
+			this._hideThumbnailsSlider();
+			return;
+		}
 
 		if (mmOverview) {
 			log('[MultiMonitors] mmOverview already exists, returning');
@@ -143,27 +150,49 @@ export default class MultiMonitorsExtension extends Extension {
 	}
 
 	_relayout() {
-		if (this._mmMonitors != Main.layoutManager.monitors.length) {
-			this._mmMonitors = Main.layoutManager.monitors.length;
+		const newCount = Main.layoutManager.monitors.length;
+		const newPrimary = Main.layoutManager.primaryIndex;
+		if (this._mmMonitors !== newCount || this._primaryIndex !== newPrimary) {
+			log('[MultiMonitors] _relayout: monitors ' + this._mmMonitors + '->' + newCount +
+				', primary ' + this._primaryIndex + '->' + newPrimary);
+			this._mmMonitors = newCount;
+			this._primaryIndex = newPrimary;
 			this._hideThumbnailsSlider();
 			this._showThumbnailsSlider();
 		}
 	}
 
 	_switchOffThumbnails() {
-		if (this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID)) {
+		if (this._settings.get_boolean('force-workspaces-on-all-displays') && this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID)) {
 			this._settings.set_string(THUMBNAILS_SLIDER_POSITION_ID, 'none');
 		}
 	}
 
 	enable() {
 		this._mmMonitors = 0;
+		this._primaryIndex = -1;
 
 		this._settings = this.getSettings();
 		this._mu_settings = new Gio.Settings({ schema: MUTTER_SCHEMA });
 
 		this._switchOffThumbnailsMuId = this._mu_settings.connect('changed::' + WORKSPACES_ONLY_ON_PRIMARY_ID,
 			this._switchOffThumbnails.bind(this));
+		this._forceWorkspacesId = this._settings.connect('changed::force-workspaces-on-all-displays', () => {
+			if (this._settings.get_boolean('force-workspaces-on-all-displays')) {
+				if (this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID))
+					this._mu_settings.set_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID, false);
+			} else {
+				if (!this._mu_settings.get_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID))
+					this._mu_settings.set_boolean(WORKSPACES_ONLY_ON_PRIMARY_ID, true);
+			}
+			this._hideThumbnailsSlider();
+			this._showThumbnailsSlider();
+		});
+
+		this._showOverviewId = this._settings.connect('changed::show-overview-on-extended-monitors', () => {
+			this._hideThumbnailsSlider();
+			this._showThumbnailsSlider();
+		});
 
 		mmLayoutManager = new MMLayout.MultiMonitorsLayoutManager(this._settings);
 
@@ -173,6 +202,19 @@ export default class MultiMonitorsExtension extends Extension {
 		this._thumbnailsSliderPositionId = this._settings.connect('changed::' + THUMBNAILS_SLIDER_POSITION_ID, this._showThumbnailsSlider.bind(this));
 		this._relayoutId = Main.layoutManager.connect('monitors-changed', this._relayout.bind(this));
 		this._relayout();
+
+		// Proactively tear down extra panels before suspend so the lock
+		// screen on wake gets correct single-monitor geometry.
+		try {
+			const loginMgr = LoginManager.getLoginManager();
+			this._prepareForSleepId = loginMgr.connect('prepare-for-sleep',
+				(mgr, aboutToSuspend) => {
+					if (aboutToSuspend)
+						this._onPrepareForSleep();
+				});
+		} catch (e) {
+			log('[MultiMonitors] Could not connect prepare-for-sleep: ' + e);
+		}
 
 		mmPanel.length = 0;
 		MMLayout.setMMPanelArrayRef(mmPanel);
@@ -200,9 +242,36 @@ export default class MultiMonitorsExtension extends Extension {
 		ScreenshotPatch.patchScreenshotUI(this._settings);
 	}
 
+	/**
+	 * Called just before the system suspends.  Tear down all extra-monitor
+	 * chrome so GNOME Shell's layout regions are clean when the lock
+	 * screen dialog is positioned on wake.
+	 */
+	_onPrepareForSleep() {
+		log('[MultiMonitors] _onPrepareForSleep: cleaning up before suspend');
+		if (mmLayoutManager) {
+			mmLayoutManager.hidePanel();
+			mmLayoutManager = null;
+		}
+		this._hideThumbnailsSlider();
+		this._mmMonitors = 0;
+		this._primaryIndex = -1;
+		mmPanel.length = 0;
+	}
+
 	disable() {
 		// Unpatch screenshot UI
 		ScreenshotPatch.unpatchScreenshotUI();
+
+		if (this._prepareForSleepId) {
+			try {
+				const loginMgr = LoginManager.getLoginManager();
+				loginMgr.disconnect(this._prepareForSleepId);
+			} catch (e) {
+				// Ignore
+			}
+			this._prepareForSleepId = null;
+		}
 
 		if (this._relayoutId) {
 			Main.layoutManager.disconnect(this._relayoutId);
@@ -212,6 +281,16 @@ export default class MultiMonitorsExtension extends Extension {
 		if (this._switchOffThumbnailsMuId) {
 			this._mu_settings.disconnect(this._switchOffThumbnailsMuId);
 			this._switchOffThumbnailsMuId = null;
+		}
+
+		if (this._forceWorkspacesId) {
+			this._settings.disconnect(this._forceWorkspacesId);
+			this._forceWorkspacesId = null;
+		}
+
+		if (this._showOverviewId) {
+			this._settings.disconnect(this._showOverviewId);
+			this._showOverviewId = null;
 		}
 
 		if (this._showPanelId) {
@@ -231,6 +310,7 @@ export default class MultiMonitorsExtension extends Extension {
 
 		this._hideThumbnailsSlider();
 		this._mmMonitors = 0;
+		this._primaryIndex = -1;
 
 		mmPanel.length = 0;
 

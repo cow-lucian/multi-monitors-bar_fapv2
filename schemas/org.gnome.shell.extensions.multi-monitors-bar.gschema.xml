@@ -1,6 +1,6 @@
 <schemalist gettext-domain="gnome-shell-extensions">
-  <schema id="org.gnome.shell.extensions.multi-monitors-add-on"
-    path="/org/gnome/shell/extensions/multi-monitors-add-on/">
+  <schema id="org.gnome.shell.extensions.multi-monitors-bar"
+    path="/org/gnome/shell/extensions/multi-monitors-bar/">
 
     <key name="show-indicator" type="b">
       <default>true</default>
@@ -23,7 +23,7 @@
     <key name="show-app-menu" type="b">
       <default>true</default>
       <summary>Show AppMenu-Button on additional monitors.</summary>
-      <description>Change visibility of AppMenu-Button on additional monitors.</description>
+      <description>Change visibility of Activities-Button on additional monitors.</description>
     </key>
 
     <key name="show-date-time" type="b">
@@ -67,7 +67,8 @@
     <key name="enable-blur-my-shell" type="b">
       <default>true</default>
       <summary>Enable Blur my Shell integration.</summary>
-      <description>Automatically register secondary panels with Blur my Shell extension for blur effects.</description>
+      <description>Automatically register secondary panels with Blur my Shell extension for blur
+        effects.</description>
     </key>
 
     <key name="screenshot-on-all-monitors" type="b">
@@ -75,6 +76,20 @@
       <summary>Show screenshot tools on all monitors.</summary>
       <description>When enabled, the screenshot UI tools will be shown on all monitors
         simultaneously. When disabled, they appear only on the monitor where the cursor is.</description>
+    </key>
+
+    <key name="force-workspaces-on-all-displays" type="b">
+      <default>true</default>
+      <summary>Force workspaces on all displays.</summary>
+      <description>When enabled, the extension forces GNOME's workspace setting to span all
+        displays. Disabling this may affect the workspaces thumbnail slider on secondary monitors.</description>
+    </key>
+
+    <key name="show-overview-on-extended-monitors" type="b">
+      <default>true</default>
+      <summary>Show App Grid and Search on extended monitors.</summary>
+      <description>When enabled, the custom overview (App Grid and Search) is shown on extended
+        monitors. Disabling this completely hides the overview from secondary displays.</description>
     </key>
 
   </schema>
