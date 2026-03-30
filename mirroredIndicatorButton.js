@@ -188,7 +188,9 @@ export const MirroredIndicatorButton = GObject.registerClass(
                     });
 
                     const updateClock = () => {
-                        if (this._sourceIndicator._clockDisplay) {
+                        if (this._isCleanedUp)
+                            return;
+                        if (this._sourceIndicator._clockDisplay && clockDisplay.get_parent()) {
                             clockDisplay.text = this._sourceIndicator._clockDisplay.text;
                         }
                     };
@@ -202,6 +204,10 @@ export const MirroredIndicatorButton = GObject.registerClass(
                     }
 
                     this._clockUpdateId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+                        if (this._isCleanedUp) {
+                            this._clockUpdateId = null;
+                            return GLib.SOURCE_REMOVE;
+                        }
                         try {
                             updateClock();
                             return GLib.SOURCE_CONTINUE;
@@ -258,7 +264,9 @@ export const MirroredIndicatorButton = GObject.registerClass(
             });
 
             const updateClock = () => {
-                if (this._sourceIndicator._clockDisplay) {
+                if (this._isCleanedUp)
+                    return;
+                if (this._sourceIndicator._clockDisplay && clockDisplay.get_parent()) {
                     clockDisplay.text = this._sourceIndicator._clockDisplay.text;
                 }
             };
@@ -272,6 +280,10 @@ export const MirroredIndicatorButton = GObject.registerClass(
             }
 
             this._clockUpdateId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+                if (this._isCleanedUp) {
+                    this._clockUpdateId = null;
+                    return GLib.SOURCE_REMOVE;
+                }
                 try {
                     updateClock();
                     return GLib.SOURCE_CONTINUE;
@@ -721,11 +733,12 @@ export const MirroredIndicatorButton = GObject.registerClass(
 
             // Full rebuild every 5 seconds to catch added/removed icons
             this._iconSyncId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+                if (this._isCleanedUp) {
+                    this._iconSyncId = null;
+                    return GLib.SOURCE_REMOVE;
+                }
                 try {
                     if (this._iconContainer && this._iconSource) {
-                        // Verify actors are still alive before accessing
-                        this._iconContainer.visible;
-                        this._iconSource.visible;
                         this._copyIconsFromSource(this._iconContainer, this._iconSource);
                     }
                     return GLib.SOURCE_CONTINUE;
@@ -738,9 +751,12 @@ export const MirroredIndicatorButton = GObject.registerClass(
 
             // Sync label text more frequently (every 2 seconds) for Vitals-like extensions
             this._labelSyncId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+                if (this._isCleanedUp) {
+                    this._labelSyncId = null;
+                    return GLib.SOURCE_REMOVE;
+                }
                 try {
                     if (this._iconContainer) {
-                        this._iconContainer.visible;
                         this._syncLabelTexts(this._iconContainer);
                     }
                     return GLib.SOURCE_CONTINUE;

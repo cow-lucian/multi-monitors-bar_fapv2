@@ -440,11 +440,15 @@ Common.copyClass(WorkspaceThumbnail.ThumbnailsBox, MultiMonitorsThumbnailsBoxCla
             if (this._isDestroyed) return;
             if (this._thumbnails)
                 this._thumbnails = this._thumbnails.filter(t => t && !t._isDestroyed);
+            const extSettings = this._settings;
+            this._settings = this._mutterSettings;
             try {
                 return _origUpdateStates.call(this);
             } catch (e) {
                 if (!e.message?.includes('disposed'))
                     throw e;
+            } finally {
+                this._settings = extSettings;
             }
         };
     }
@@ -453,11 +457,18 @@ Common.copyClass(WorkspaceThumbnail.ThumbnailsBox, MultiMonitorsThumbnailsBoxCla
     if (_origCreateThumbnails) {
         MultiMonitorsThumbnailsBoxClass.prototype._createThumbnails = function() {
             if (this._isDestroyed) return;
+            // The upstream ThumbnailsBox._createThumbnails expects this._settings to be
+            // the org.gnome.mutter settings (where dynamic-workspaces lives). In our class
+            // this._settings is the extension settings, so temporarily swap it.
+            const extSettings = this._settings;
+            this._settings = this._mutterSettings;
             try {
                 return _origCreateThumbnails.call(this);
             } catch (e) {
                 if (!e.message?.includes('disposed'))
                     throw e;
+            } finally {
+                this._settings = extSettings;
             }
         };
     }
